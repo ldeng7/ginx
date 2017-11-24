@@ -27,7 +27,6 @@ func Init(logPath string) (*logx.Logger, error) {
 	l, err := logx.Init(&logx.InitArgs{
 		Filename: path.Join(logPath, gin.Mode()+".error.log"),
 		Flags:    log.LstdFlags | log.Lshortfile,
-		LogLevel: logx.INFO,
 	})
 	if nil != err {
 		return nil, err
