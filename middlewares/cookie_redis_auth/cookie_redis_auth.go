@@ -11,17 +11,16 @@ import (
 const COOKIE_NAME_UID = "uid"
 const COOKIE_NAME_TOKEN = "token"
 const GIN_META_UID = "uid"
-const REDIS_KEY = "token:"
+const RED_KEY_PREF = "cooauth:"
 
 type CookieRedisAuth struct {
 	red    *redis.Client
 	prefix string
 	ttl    time.Duration
-	path   string
 }
 
-func New(red *redis.Client, namespace string, ttl time.Duration, path string) *CookieRedisAuth {
-	prefix := "cooauth:"
+func New(red *redis.Client, namespace string, ttl time.Duration) *CookieRedisAuth {
+	prefix := RED_KEY_PREF
 	if len(namespace) > 0 {
 		prefix = namespace + ":" + prefix
 	}
@@ -29,43 +28,36 @@ func New(red *redis.Client, namespace string, ttl time.Duration, path string) *C
 		red:    red,
 		prefix: prefix,
 		ttl:    ttl,
-		path:   path,
 	}
 }
 
-func (c *CookieRedisAuth) redisKey(uid string) string {
-	return c.prefix + uid
+func (c *CookieRedisAuth) auth(ctx *gin.Context) (int, *http.Cookie) {
+	cookieUid, err := ctx.Request.Cookie(COOKIE_NAME_UID)
+	if nil != err {
+		return http.StatusUnauthorized, nil
+	}
+	cookieToken, err := ctx.Request.Cookie(COOKIE_NAME_TOKEN)
+	if nil != err {
+		return http.StatusUnauthorized, nil
+	}
+	token, err := c.red.Get(c.prefix + cookieUid.Value).Result()
+	if redis.Nil == err {
+		return http.StatusUnauthorized, nil
+	} else if nil != err {
+		return http.StatusInternalServerError, nil
+	} else if token != cookieToken.Value {
+		return http.StatusUnauthorized, nil
+	}
+	return http.StatusOK, cookieUid
 }
 
 func (c *CookieRedisAuth) Middleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		cookieUid, err := ctx.Request.Cookie(COOKIE_NAME_UID)
-		if nil != err {
-			ctx.Status(http.StatusUnauthorized)
-			ctx.Abort()
+		status, cookieUid := c.auth(ctx)
+		if http.StatusOK != status {
+			ctx.AbortWithStatus(status)
 			return
 		}
-		cookieToken, err := ctx.Request.Cookie(COOKIE_NAME_TOKEN)
-		if nil != err {
-			ctx.Status(http.StatusUnauthorized)
-			ctx.Abort()
-			return
-		}
-		token, err := c.red.Get(c.redisKey(cookieUid.Value)).Result()
-		if redis.Nil == err {
-			ctx.Status(http.StatusUnauthorized)
-			ctx.Abort()
-			return
-		} else if nil != err {
-			ctx.Status(http.StatusInternalServerError)
-			ctx.Abort()
-			return
-		} else if token != cookieToken.Value {
-			ctx.Status(http.StatusUnauthorized)
-			ctx.Abort()
-			return
-		}
-
 		ctx.Set(GIN_META_UID, cookieUid.Value)
 		ctx.Next()
 	}
@@ -73,7 +65,7 @@ func (c *CookieRedisAuth) Middleware() gin.HandlerFunc {
 
 func (c *CookieRedisAuth) Set(ctx *gin.Context, uid, token string) error {
 	now := time.Now()
-	if err := c.red.Set(c.redisKey(uid), token, c.ttl).Err(); nil != err {
+	if err := c.red.Set(c.prefix+uid, token, c.ttl).Err(); nil != err {
 		return err
 	}
 	expire := now.Add(c.ttl)
@@ -81,14 +73,14 @@ func (c *CookieRedisAuth) Set(ctx *gin.Context, uid, token string) error {
 	http.SetCookie(ctx.Writer, &http.Cookie{
 		Name:    COOKIE_NAME_UID,
 		Value:   uid,
-		Path:    c.path,
+		Path:    "/",
 		Expires: expire,
 		MaxAge:  maxAge,
 	})
 	http.SetCookie(ctx.Writer, &http.Cookie{
 		Name:    COOKIE_NAME_TOKEN,
 		Value:   token,
-		Path:    c.path,
+		Path:    "/",
 		Expires: expire,
 		MaxAge:  maxAge,
 	})
