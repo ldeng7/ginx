@@ -1,38 +1,40 @@
 package redis_auth
 
 import (
+	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-redis/redis"
-	"github.com/ldeng7/go-logx/logx"
 )
 
 type RedisAuth struct {
 	Red    *redis.Client
 	Prefix string
-	Logger *logx.Logger
 }
 
-func New(red *redis.Client, namespace, prefix string, logger *logx.Logger) *RedisAuth {
+func New(red *redis.Client, namespace, prefix string) *RedisAuth {
 	if len(namespace) > 0 {
 		prefix = namespace + ":" + prefix
 	}
 	return &RedisAuth{
 		Red:    red,
 		Prefix: prefix,
-		Logger: logger,
 	}
 }
 
-func (a *RedisAuth) Read(uid, token string) int {
+func (a *RedisAuth) Read(uid, token string) (int, error) {
 	tokenRed, err := a.Red.Get(a.Prefix + uid).Result()
 	if redis.Nil == err {
-		return http.StatusUnauthorized
+		return http.StatusUnauthorized, errors.New("unauthorized")
 	} else if nil != err {
-		a.Logger.Err(err.Error())
-		return http.StatusInternalServerError
+		return http.StatusInternalServerError, err
 	} else if tokenRed != token {
-		return http.StatusUnauthorized
+		return http.StatusUnauthorized, errors.New("unauthorized")
 	}
-	return http.StatusOK
+	return http.StatusOK, nil
+}
+
+func (a *RedisAuth) Write(uid, token string, ttl time.Duration) error {
+	return a.Red.Set(a.Prefix+uid, token, ttl).Err()
 }

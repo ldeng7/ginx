@@ -12,7 +12,6 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/ldeng7/ginx"
 	"github.com/ldeng7/ginx/middlewares/redis_auth"
-	"github.com/ldeng7/go-logx/logx"
 )
 
 const RED_KEY_PREF = "cauth:"
@@ -28,30 +27,31 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
-func New(red *redis.Client, namespace string, logger *logx.Logger) *RedisCookieAuth {
+func New(red *redis.Client, namespace string) *RedisCookieAuth {
 	return &RedisCookieAuth{
-		redis_auth.New(red, namespace, RED_KEY_PREF, logger),
+		redis_auth.New(red, namespace, RED_KEY_PREF),
 	}
 }
 
-func (a *RedisCookieAuth) auth(gc *gin.Context) (int, string) {
+func (a *RedisCookieAuth) auth(gc *gin.Context) (int, string, error) {
 	cookieUid, err := gc.Request.Cookie(COOKIE_NAME_UID)
 	if nil != err {
-		return http.StatusUnauthorized, ""
+		return http.StatusUnauthorized, err
 	}
 	cookieToken, err := gc.Request.Cookie(COOKIE_NAME_TOKEN)
 	if nil != err {
-		return http.StatusUnauthorized, ""
+		return http.StatusUnauthorized, err
 	}
-	return a.Read(cookieUid.Value, cookieToken.Value), cookieUid.Value
+	status, err := a.Read(cookieUid.Value, cookieToken.Value)
+	return status, cookieUid.Value, err
 }
 
 func (a *RedisCookieAuth) Middleware() gin.HandlerFunc {
 	return func(gc *gin.Context) {
-		status, uid := a.auth(gc)
+		status, uid, err := a.auth(gc)
 		if http.StatusOK != status {
 			c := ginx.Context{gc}
-			c.RenderError(&ginx.RespError{StatusCode: status})
+			c.RenderError(&ginx.RespError{StatusCode: status, Message: err.Error()})
 			gc.Abort()
 			return
 		}
@@ -67,7 +67,7 @@ func (a *RedisCookieAuth) Set(gc *gin.Context, uid string, ttl time.Duration) er
 	h.Write([]byte(strconv.Itoa(rand.Int())))
 	token := fmt.Sprintf("%x", h.Sum(nil))
 
-	if err := a.Red.Set(a.Prefix+uid, token, ttl).Err(); nil != err {
+	if err := a.Write(uid, token, ttl); nil != err {
 		return err
 	}
 	expire := now.Add(ttl)

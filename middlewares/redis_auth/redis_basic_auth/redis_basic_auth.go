@@ -2,6 +2,7 @@ package redis_basic_auth
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,7 +11,6 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/ldeng7/ginx"
 	"github.com/ldeng7/ginx/middlewares/redis_auth"
-	"github.com/ldeng7/go-logx/logx"
 )
 
 const RED_KEY_PREF = "bauth:"
@@ -21,9 +21,9 @@ type RedisBasicAuth struct {
 	realm string
 }
 
-func New(red *redis.Client, namespace, realm string, logger *logx.Logger) *RedisBasicAuth {
+func New(red *redis.Client, namespace, realm string) *RedisBasicAuth {
 	return &RedisBasicAuth{
-		RedisAuth: redis_auth.New(red, namespace, RED_KEY_PREF, logger),
+		RedisAuth: redis_auth.New(red, namespace, RED_KEY_PREF),
 		realm:     realm,
 	}
 }
@@ -50,23 +50,24 @@ func decodeAuth(s string) (string, string) {
 	return parts[0], parts[1]
 }
 
-func (a *RedisBasicAuth) auth(gc *gin.Context) (int, string) {
+func (a *RedisBasicAuth) auth(gc *gin.Context) (int, string, error) {
 	u, p := decodeAuth(gc.GetHeader("Authorization"))
 	if 0 == len(u) || 0 == len(p) {
-		return http.StatusUnauthorized, ""
+		return http.StatusUnauthorized, "", errors.New("unauthorized")
 	}
-	return a.Read(u, p), u
+	status, err := a.Read(u, p)
+	return status, u, err
 }
 
 func (a *RedisBasicAuth) Middleware() gin.HandlerFunc {
 	return func(gc *gin.Context) {
-		status, uid := a.auth(gc)
+		status, uid, err := a.auth(gc)
 		if http.StatusOK != status {
 			if http.StatusUnauthorized == status {
 				c.Header("WWW-Authenticate", fmt.Sprintf(`Basic Realm="%s"`, a.realm))
 			}
 			c := ginx.Context{gc}
-			c.RenderError(&ginx.RespError{StatusCode: status})
+			c.RenderError(&ginx.RespError{StatusCode: status, Message: err.Error()})
 			gc.Abort()
 			return
 		}
