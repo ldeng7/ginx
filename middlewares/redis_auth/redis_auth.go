@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-redis/redis"
-	"github.com/ldeng7/go-x/logx"
+	"github.com/ldeng7/go-logx/logx"
 )
 
 type RedisAuth struct {

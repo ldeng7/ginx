@@ -12,7 +12,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/ldeng7/ginx"
 	"github.com/ldeng7/ginx/middlewares/redis_auth"
-	"github.com/ldeng7/go-x/logx"
+	"github.com/ldeng7/go-logx/logx"
 )
 
 const RED_KEY_PREF = "cauth:"
@@ -34,12 +34,12 @@ func New(red *redis.Client, namespace string, logger *logx.Logger) *RedisCookieA
 	}
 }
 
-func (a *RedisCookieAuth) auth(c *gin.Context) (int, string) {
-	cookieUid, err := c.Request.Cookie(COOKIE_NAME_UID)
+func (a *RedisCookieAuth) auth(gc *gin.Context) (int, string) {
+	cookieUid, err := gc.Request.Cookie(COOKIE_NAME_UID)
 	if nil != err {
 		return http.StatusUnauthorized, ""
 	}
-	cookieToken, err := c.Request.Cookie(COOKIE_NAME_TOKEN)
+	cookieToken, err := gc.Request.Cookie(COOKIE_NAME_TOKEN)
 	if nil != err {
 		return http.StatusUnauthorized, ""
 	}
@@ -47,19 +47,20 @@ func (a *RedisCookieAuth) auth(c *gin.Context) (int, string) {
 }
 
 func (a *RedisCookieAuth) Middleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		status, uid := a.auth(c)
+	return func(gc *gin.Context) {
+		status, uid := a.auth(gc)
 		if http.StatusOK != status {
-			ginx.RenderError(c, &ginx.RespError{StatusCode: status})
-			c.Abort()
+			c := ginx.Context{gc}
+			c.RenderError(&ginx.RespError{StatusCode: status})
+			gc.Abort()
 			return
 		}
-		c.Set(GIN_META_UID, uid)
-		c.Next()
+		gc.Set(GIN_META_UID, uid)
+		gc.Next()
 	}
 }
 
-func (a *RedisCookieAuth) Set(c *gin.Context, uid string, ttl time.Duration) error {
+func (a *RedisCookieAuth) Set(gc *gin.Context, uid string, ttl time.Duration) error {
 	now := time.Now()
 	h := md5.New()
 	h.Write([]byte(now.String()))
@@ -71,14 +72,14 @@ func (a *RedisCookieAuth) Set(c *gin.Context, uid string, ttl time.Duration) err
 	}
 	expire := now.Add(ttl)
 	maxAge := int(ttl / time.Second)
-	http.SetCookie(c.Writer, &http.Cookie{
+	http.SetCookie(gc.Writer, &http.Cookie{
 		Name:    COOKIE_NAME_UID,
 		Value:   uid,
 		Path:    "/",
 		Expires: expire,
 		MaxAge:  maxAge,
 	})
-	http.SetCookie(c.Writer, &http.Cookie{
+	http.SetCookie(gc.Writer, &http.Cookie{
 		Name:    COOKIE_NAME_TOKEN,
 		Value:   token,
 		Path:    "/",

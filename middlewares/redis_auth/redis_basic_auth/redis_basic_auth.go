@@ -10,7 +10,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/ldeng7/ginx"
 	"github.com/ldeng7/ginx/middlewares/redis_auth"
-	"github.com/ldeng7/go-x/logx"
+	"github.com/ldeng7/go-logx/logx"
 )
 
 const RED_KEY_PREF = "bauth:"
@@ -50,8 +50,8 @@ func decodeAuth(s string) (string, string) {
 	return parts[0], parts[1]
 }
 
-func (a *RedisBasicAuth) auth(c *gin.Context) (int, string) {
-	u, p := decodeAuth(c.GetHeader("Authorization"))
+func (a *RedisBasicAuth) auth(gc *gin.Context) (int, string) {
+	u, p := decodeAuth(gc.GetHeader("Authorization"))
 	if 0 == len(u) || 0 == len(p) {
 		return http.StatusUnauthorized, ""
 	}
@@ -59,17 +59,18 @@ func (a *RedisBasicAuth) auth(c *gin.Context) (int, string) {
 }
 
 func (a *RedisBasicAuth) Middleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		status, uid := a.auth(c)
+	return func(gc *gin.Context) {
+		status, uid := a.auth(gc)
 		if http.StatusOK != status {
 			if http.StatusUnauthorized == status {
 				c.Header("WWW-Authenticate", fmt.Sprintf(`Basic Realm="%s"`, a.realm))
 			}
-			ginx.RenderError(c, &ginx.RespError{StatusCode: status})
-			c.Abort()
+			c := ginx.Context{gc}
+			c.RenderError(&ginx.RespError{StatusCode: status})
+			gc.Abort()
 			return
 		}
-		c.Set(GIN_META_UID, uid)
-		c.Next()
+		gc.Set(GIN_META_UID, uid)
+		gc.Next()
 	}
 }

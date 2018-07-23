@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ldeng7/go-x/logx"
+	"github.com/ldeng7/go-logx/logx"
 )
 
 func InitLogger(writer io.Writer, logPath string, logLevel int) (*logx.Logger, error) {
