@@ -67,7 +67,7 @@ func (a *RedisBasicAuth) Middleware() gin.HandlerFunc {
 				c.Header("WWW-Authenticate", fmt.Sprintf(`Basic Realm="%s"`, a.realm))
 			}
 			c := ginx.Context{gc}
-			c.RenderError(&ginx.RespError{StatusCode: status, Message: err.Error()})
+			c.RenderError(&ginx.RespError{Status: status, Message: err.Error()})
 			gc.Abort()
 			return
 		}

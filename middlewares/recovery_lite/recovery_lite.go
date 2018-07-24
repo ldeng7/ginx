@@ -28,7 +28,7 @@ func recovery(gc *gin.Context, logger *logx.Logger, callback func(*gin.Context, 
 	}
 
 	c := ginx.Context{gc}
-	c.RenderError(&ginx.RespError{StatusCode: http.StatusInternalServerError})
+	c.RenderError(&ginx.RespError{Status: http.StatusInternalServerError})
 	gc.Abort()
 }
 

@@ -52,7 +52,7 @@ func (a *RedisTokenAuth) Middleware() gin.HandlerFunc {
 		status, uid, err := a.auth(gc)
 		if http.StatusOK != status {
 			c := ginx.Context{gc}
-			c.RenderError(&ginx.RespError{StatusCode: status, Message: err.Error()})
+			c.RenderError(&ginx.RespError{Status: status, Message: err.Error()})
 			gc.Abort()
 			return
 		}

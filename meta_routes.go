@@ -10,7 +10,7 @@ var metaRoutes map[string]func(r *gin.Engine) = map[string]func(r *gin.Engine){
 	"noroute": func(r *gin.Engine) {
 		r.NoRoute(func(gc *gin.Context) {
 			c := &Context{gc}
-			c.RenderError(&RespError{StatusCode: http.StatusNotFound})
+			c.RenderError(&RespError{Status: http.StatusNotFound})
 		})
 	},
 

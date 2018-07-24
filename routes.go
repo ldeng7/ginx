@@ -12,15 +12,15 @@ const (
 )
 
 type Resp struct {
-	ResCode int         `json:"result"`
+	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 }
 
 type RespError struct {
-	StatusCode int
-	ResCode    int
-	Message    string
+	Status  int
+	Code    int
+	Message string
 }
 
 func (e *RespError) Error() string {
@@ -38,14 +38,14 @@ func (c *Context) RenderData(data interface{}) {
 func (c *Context) RenderError(err error) {
 	if respErr, ok := err.(*RespError); ok {
 		if nil != respErr {
-			statusCode, resCode := respErr.StatusCode, respErr.ResCode
-			if 0 == statusCode {
-				statusCode = http.StatusOK
+			status, code := respErr.Status, respErr.Code
+			if 0 == status {
+				status = http.StatusOK
 			}
-			if 0 == resCode {
-				resCode = RES_CODE_GENERAL_ERROR
+			if 0 == code {
+				code = RES_CODE_GENERAL_ERROR
 			}
-			c.JSON(statusCode, &Resp{resCode, respErr.Message, nil})
+			c.JSON(status, &Resp{code, respErr.Message, nil})
 		} else {
 			c.JSON(http.StatusOK, &Resp{RES_CODE_GENERAL_ERROR, "error", nil})
 		}
