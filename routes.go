@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	RES_CODE_OK            = 0
-	RES_CODE_GENERAL_ERROR = 1
+	RES_CODE_OK = iota
+	RES_CODE_GENERAL_ERROR
+	RES_CODE_INVALID_REQ
 )
 
 type Resp struct {
