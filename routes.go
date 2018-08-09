@@ -36,6 +36,10 @@ func (c *Context) RenderData(data interface{}) {
 	c.JSON(http.StatusOK, &Resp{RES_CODE_OK, "success", data})
 }
 
+func (c *Context) RenderMessage(code int, message string) {
+	c.JSON(http.StatusOK, &Resp{code, message, nil})
+}
+
 func (c *Context) RenderError(err error) {
 	if respErr, ok := err.(*RespError); ok {
 		if nil != respErr {
@@ -48,12 +52,12 @@ func (c *Context) RenderError(err error) {
 			}
 			c.JSON(status, &Resp{code, respErr.Message, nil})
 		} else {
-			c.JSON(http.StatusOK, &Resp{RES_CODE_GENERAL_ERROR, "error", nil})
+			c.JSON(http.StatusOK, &Resp{RES_CODE_OK, "success", nil})
 		}
 	} else if nil != err {
 		c.JSON(http.StatusOK, &Resp{RES_CODE_GENERAL_ERROR, err.Error(), nil})
 	} else {
-		c.JSON(http.StatusOK, &Resp{RES_CODE_GENERAL_ERROR, "error", nil})
+		c.JSON(http.StatusOK, &Resp{RES_CODE_OK, "success", nil})
 	}
 }
 
@@ -85,14 +89,14 @@ type IDeleteController interface {
 	Delete(*Context)
 }
 
-func AddRoutes(group *gin.RouterGroup, path string, controller interface{}) {
+func AddRoutes(group *gin.RouterGroup, path, pluralPath string, controller interface{}) {
 	if con, ok := controller.(ICreateController); ok {
 		group.POST(path, func(gc *gin.Context) {
 			con.Create(&Context{gc})
 		})
 	}
 	if con, ok := controller.(IListController); ok {
-		group.GET(path, func(gc *gin.Context) {
+		group.GET(pluralPath, func(gc *gin.Context) {
 			con.List(&Context{gc})
 		})
 	}
