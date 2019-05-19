@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ldeng7/ginx"
-	"github.com/ldeng7/go-logx/logx"
+	"github.com/ldeng7/go-x/logx"
 )
 
 func recovery(gc *gin.Context, logger *logx.Logger, callback func(*gin.Context, interface{})) {
