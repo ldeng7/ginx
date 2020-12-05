@@ -9,7 +9,7 @@ import (
 	"github.com/ldeng7/go-x/logx"
 )
 
-func recovery(gc *gin.Context, logger *logx.Logger, callback func(*gin.Context, interface{})) {
+func recovery(gc *gin.Context, logger *logx.Logger, depth int, callback func(*gin.Context, interface{})) {
 	p := recover()
 	if nil == p {
 		return
@@ -19,7 +19,7 @@ func recovery(gc *gin.Context, logger *logx.Logger, callback func(*gin.Context, 
 		callback(gc, p)
 	}
 	logger.Err("panic: ", p)
-	for i := 3; ; i++ {
+	for i := 2; i < depth+2; i++ {
 		_, file, line, ok := runtime.Caller(i)
 		if !ok {
 			break
@@ -32,9 +32,9 @@ func recovery(gc *gin.Context, logger *logx.Logger, callback func(*gin.Context, 
 	gc.Abort()
 }
 
-func Recovery(logger *logx.Logger, callback func(*gin.Context, interface{})) gin.HandlerFunc {
+func Recovery(logger *logx.Logger, depth int, callback func(*gin.Context, interface{})) gin.HandlerFunc {
 	return func(gc *gin.Context) {
-		defer recovery(gc, logger, callback)
+		defer recovery(gc, logger, depth, callback)
 		gc.Next()
 	}
 }

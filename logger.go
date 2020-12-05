@@ -8,8 +8,8 @@ import (
 	"github.com/ldeng7/go-x/logx"
 )
 
-func InitLogger(writer io.Writer, logPath string, logLevel int) (*logx.Logger, error) {
-	l, err := logx.Init(&logx.InitArgs{
+func NewLogger(writer io.Writer, logPath string, logLevel int) (*logx.Logger, error) {
+	l, err := logx.New(&logx.InitArgs{
 		Writer:   writer,
 		Filename: logPath + ".error.log",
 		Flags:    log.LstdFlags | log.Lshortfile,
@@ -19,7 +19,7 @@ func InitLogger(writer io.Writer, logPath string, logLevel int) (*logx.Logger, e
 		return nil, err
 	}
 
-	la, err := logx.Init(&logx.InitArgs{
+	la, err := logx.New(&logx.InitArgs{
 		Writer:   writer,
 		Filename: logPath + ".access.log",
 	})
