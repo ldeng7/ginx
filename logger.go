@@ -5,11 +5,11 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ldeng7/go-x/logx"
+	"github.com/ldeng7/go-logger-lite/logger"
 )
 
-func NewLogger(writer io.Writer, logPath string, logLevel int) (*logx.Logger, error) {
-	l, err := logx.New(&logx.InitArgs{
+func NewLogger(writer io.Writer, logPath string, logLevel int) (*logger.Logger, error) {
+	l, err := logger.New(&logger.InitArgs{
 		Writer:   writer,
 		Filename: logPath + ".error.log",
 		Flags:    log.LstdFlags | log.Lshortfile,
@@ -19,7 +19,7 @@ func NewLogger(writer io.Writer, logPath string, logLevel int) (*logx.Logger, er
 		return nil, err
 	}
 
-	la, err := logx.New(&logx.InitArgs{
+	la, err := logger.New(&logger.InitArgs{
 		Writer:   writer,
 		Filename: logPath + ".access.log",
 	})

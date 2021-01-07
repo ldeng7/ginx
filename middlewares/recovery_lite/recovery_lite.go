@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ldeng7/ginx"
-	"github.com/ldeng7/go-x/logx"
+	"github.com/ldeng7/go-logger-lite/logger"
 )
 
-func recovery(gc *gin.Context, logger *logx.Logger, depth int, callback func(*gin.Context, interface{})) {
+func recovery(gc *gin.Context, logger *logger.Logger, depth int, callback func(*gin.Context, interface{})) {
 	p := recover()
 	if nil == p {
 		return
@@ -32,7 +32,7 @@ func recovery(gc *gin.Context, logger *logx.Logger, depth int, callback func(*gi
 	gc.Abort()
 }
 
-func Recovery(logger *logx.Logger, depth int, callback func(*gin.Context, interface{})) gin.HandlerFunc {
+func Recovery(logger *logger.Logger, depth int, callback func(*gin.Context, interface{})) gin.HandlerFunc {
 	return func(gc *gin.Context) {
 		defer recovery(gc, logger, depth, callback)
 		gc.Next()
