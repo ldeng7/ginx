@@ -33,7 +33,7 @@ func decodeAuth(s string) (string, string) {
 		return "", ""
 	}
 	s = s[6:]
-	if 0 == len(s) {
+	if len(s) == 0 {
 		return "", ""
 	}
 
@@ -44,7 +44,7 @@ func decodeAuth(s string) (string, string) {
 	s = string(bs)
 
 	parts := strings.Split(s, ":")
-	if 2 != len(parts) {
+	if len(parts) != 2 {
 		return "", ""
 	}
 	return parts[0], parts[1]
@@ -52,7 +52,7 @@ func decodeAuth(s string) (string, string) {
 
 func (a *RedisBasicAuth) auth(gc *gin.Context) (int, string, error) {
 	u, p := decodeAuth(gc.GetHeader("Authorization"))
-	if 0 == len(u) || 0 == len(p) {
+	if len(u) == 0 || len(p) == 0 {
 		return http.StatusUnauthorized, "", errors.New("unauthorized")
 	}
 	status, err := a.Read(u, p)
@@ -62,16 +62,16 @@ func (a *RedisBasicAuth) auth(gc *gin.Context) (int, string, error) {
 func (a *RedisBasicAuth) Middleware() gin.HandlerFunc {
 	return func(gc *gin.Context) {
 		status, uid, err := a.auth(gc)
+		c := ginx.Context{Context: gc}
 		if http.StatusOK != status {
 			if http.StatusUnauthorized == status {
 				c.Header("WWW-Authenticate", fmt.Sprintf(`Basic Realm="%s"`, a.realm))
 			}
-			c := ginx.Context{gc}
 			c.RenderError(&ginx.RespError{Status: status, Message: err.Error()})
-			gc.Abort()
+			c.Abort()
 			return
 		}
-		gc.Set(GIN_META_UID, uid)
-		gc.Next()
+		c.Set(GIN_META_UID, uid)
+		c.Next()
 	}
 }

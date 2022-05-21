@@ -36,11 +36,11 @@ func New(red *redis.Client, namespace string) *RedisCookieAuth {
 func (a *RedisCookieAuth) auth(gc *gin.Context) (int, string, error) {
 	cookieUid, err := gc.Request.Cookie(COOKIE_NAME_UID)
 	if nil != err {
-		return http.StatusUnauthorized, err
+		return http.StatusUnauthorized, "", err
 	}
 	cookieToken, err := gc.Request.Cookie(COOKIE_NAME_TOKEN)
 	if nil != err {
-		return http.StatusUnauthorized, err
+		return http.StatusUnauthorized, "", err
 	}
 	status, err := a.Read(cookieUid.Value, cookieToken.Value)
 	return status, cookieUid.Value, err
@@ -49,14 +49,14 @@ func (a *RedisCookieAuth) auth(gc *gin.Context) (int, string, error) {
 func (a *RedisCookieAuth) Middleware() gin.HandlerFunc {
 	return func(gc *gin.Context) {
 		status, uid, err := a.auth(gc)
+		c := ginx.Context{Context: gc}
 		if http.StatusOK != status {
-			c := ginx.Context{gc}
 			c.RenderError(&ginx.RespError{Status: status, Message: err.Error()})
-			gc.Abort()
+			c.Abort()
 			return
 		}
-		gc.Set(GIN_META_UID, uid)
-		gc.Next()
+		c.Set(GIN_META_UID, uid)
+		c.Next()
 	}
 }
 

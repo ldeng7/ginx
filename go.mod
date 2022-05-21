@@ -3,7 +3,7 @@ module github.com/ldeng7/ginx
 go 1.18
 
 require (
-	github.com/gin-gonic/gin v1.7
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/ldeng7/go-logger-lite v0.1.0
 )
