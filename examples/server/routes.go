@@ -17,7 +17,6 @@ func setRoutes() *gin.Engine {
 	ginx.MetaRouteRegisterAll(r)
 
 	v1Group := r.Group("v1")
-	ginx.AddRoutes(v1Group, "login", "logins", &controllers.LoginController{})
 	ginx.AddRoutes(v1Group, "user", "users", &controllers.UserController{})
 
 	return r

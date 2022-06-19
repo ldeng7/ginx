@@ -33,8 +33,6 @@ github.com/json-iterator/go v1.1.9 h1:9yzud/Ht36ygwatGx56VwCZtlI/2AD15T1X2sjSuGn
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/ldeng7/go-logger-lite v0.1.0 h1:WmriPI7w2QaORrO4hSt3cGQeJfj6aD+gOvdTyCwcmgI=
 github.com/ldeng7/go-logger-lite v0.1.0/go.mod h1:kNmH2KXggBXo8CDlDoSTedFogpVXqb9SOiIr35654MU=
-github.com/ldeng7/go-mysql-datatypes v0.1.0 h1:kzHBDt7hRkWEJw/9gBgFoXh9eQ4GMEGlA+y9e4kPpws=
-github.com/ldeng7/go-mysql-datatypes v0.1.0/go.mod h1:zHb+Qs3oZTWDPrfdw/ftvdI7a3bj0iAuoHnXucBCL0M=
 github.com/leodido/go-urn v1.2.0 h1:hpXL4XnriNwQ/ABnpepYM/1vCLWNDfUNts8dX3xTG6Y=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHXY=
