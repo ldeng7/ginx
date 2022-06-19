@@ -1,11 +1,12 @@
 package redis_auth
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
 type RedisAuth struct {
@@ -24,7 +25,7 @@ func New(red *redis.Client, namespace, prefix string) *RedisAuth {
 }
 
 func (a *RedisAuth) Read(uid, token string) (int, error) {
-	tokenRed, err := a.Red.Get(a.Prefix + uid).Result()
+	tokenRed, err := a.Red.Get(context.Background(), a.Prefix+uid).Result()
 	if redis.Nil == err {
 		return http.StatusUnauthorized, errors.New("unauthorized")
 	} else if nil != err {
@@ -36,5 +37,5 @@ func (a *RedisAuth) Read(uid, token string) (int, error) {
 }
 
 func (a *RedisAuth) Write(uid, token string, ttl time.Duration) error {
-	return a.Red.Set(a.Prefix+uid, token, ttl).Err()
+	return a.Red.Set(context.Background(), a.Prefix+uid, token, ttl).Err()
 }

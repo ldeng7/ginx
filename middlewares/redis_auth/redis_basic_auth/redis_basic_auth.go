@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
-	"github.com/ldeng7/ginx"
+	"github.com/go-redis/redis/v8"
+	"github.com/ldeng7/ginx/ginx"
 	"github.com/ldeng7/ginx/middlewares/redis_auth"
 )
 
@@ -62,16 +62,16 @@ func (a *RedisBasicAuth) auth(gc *gin.Context) (int, string, error) {
 func (a *RedisBasicAuth) Middleware() gin.HandlerFunc {
 	return func(gc *gin.Context) {
 		status, uid, err := a.auth(gc)
-		c := ginx.Context{Context: gc}
+		g := ginx.G{Context: gc}
 		if http.StatusOK != status {
 			if http.StatusUnauthorized == status {
-				c.Header("WWW-Authenticate", fmt.Sprintf(`Basic Realm="%s"`, a.realm))
+				g.Header("WWW-Authenticate", fmt.Sprintf(`Basic Realm="%s"`, a.realm))
 			}
-			c.RenderError(&ginx.RespError{Status: status, Message: err.Error()})
-			c.Abort()
+			g.RenderError(&ginx.RespError{Status: status, Message: err.Error()})
+			g.Abort()
 			return
 		}
-		c.Set(GIN_META_UID, uid)
-		c.Next()
+		g.Set(GIN_META_UID, uid)
+		g.Next()
 	}
 }
